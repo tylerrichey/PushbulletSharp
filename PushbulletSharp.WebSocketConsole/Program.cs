@@ -1,7 +1,7 @@
 ﻿using PushbulletSharp.Filters;
 using PushbulletSharp.Models.Responses.WebSocket;
 using System;
-using System.Web.Script.Serialization;
+using Newtonsoft.Json;
 using WebSocketSharp;
 
 namespace PushbulletSharp.WebSocketConsole
@@ -10,18 +10,15 @@ namespace PushbulletSharp.WebSocketConsole
     {
         static void Main(string[] args)
         {
-            string key = "--YOURKEYGOESHERE--";
-            JavaScriptSerializer js = new JavaScriptSerializer();
-            PushbulletClient Client = new PushbulletClient(key, TimeZoneInfo.Local);
-
-            DateTime lastChecked = DateTime.Now;
+            var key = "--YOURKEYGOESHERE--";
+            var Client = new PushbulletClient(key, TimeZoneInfo.Local);
+            var lastChecked = DateTime.Now;
 
             using (var ws = new WebSocket(string.Concat("wss://stream.pushbullet.com/websocket/", key)))
             {
                 ws.OnMessage += (sender, e) =>
                 {
-                    WebSocketResponse response = js.Deserialize<WebSocketResponse>(e.Data);
-
+                    var response = JsonConvert.DeserializeObject<WebSocketResponse>(e.Data);
                     switch (response.Type)
                     {
                         case "nop":
@@ -29,7 +26,7 @@ namespace PushbulletSharp.WebSocketConsole
                             break;
                         case "tickle":
                             Console.WriteLine(string.Format("Tickle recieved on {0}. Go check it out.", DateTime.Now));
-                            PushResponseFilter filter = new PushResponseFilter()
+                            var filter = new PushResponseFilter()
                             {
                                 Active = true,
                                 ModifiedDate = lastChecked
